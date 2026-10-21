@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Inu Chicken POS </title><link rel="manifest" href="https://muhammadibnu1895-cmyk.github.io/inu/manifest.webmanifest"><meta name="theme-color" content="#f05a09"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><link rel="apple-touch-icon" href="./icon-192.png">
+<title>INU Chicken POS — V11 DEV</title><meta name="theme-color" content="#f05a09"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{font-family:system-ui,Arial,sans-serif;color:#19202b;background:#f6f7fb}*{box-sizing:border-box}body{margin:0}header{background:#ae1622;color:white;padding:17px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{margin:0;font-size:21px}main{max-width:1200px;margin:25px auto;padding:0 16px}.panel{background:white;border:1px solid #e3e6eb;border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 3px 16px #1b23300a}input,select,button{font:inherit;padding:11px;border-radius:9px;border:1px solid #cbd2dd}button{background:#ae1622;color:white;border:0;cursor:pointer;font-weight:650}button:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#eef0f4;color:#222}.grid{display:grid;grid-template-columns:1.3fr .85fr;gap:18px}.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.product{border:1px solid #e3e6eb;background:#fff;color:#222;text-align:left;min-height:85px}.product b{display:block}.product small{display:block;color:#656c78;margin-top:7px}.flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.flex>*{min-width:0}.grow{flex:1}.muted{color:#6a7380}.error{color:#b91c1c}.ok{color:#137344}table{width:100%;border-collapse:collapse}td,th{border-bottom:1px solid #e7e9ee;padding:10px 5px;text-align:left}td:last-child,th:last-child{text-align:right}.qty{width:68px}.total{font-size:25px;font-weight:800}#app{display:none}#login{max-width:440px;margin:55px auto}#login input{width:100%;margin:7px 0 14px}#login button{width:100%}#notice{margin:12px 0;min-height:24px}.small{font-size:12px}@media(max-width:780px){.grid{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}}
 .admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px}.admin-grid form{display:grid;gap:10px}.admin-grid input,.admin-grid select{width:100%}.admin-grid label{display:grid;gap:5px}.tag{background:#f4e7e8;border-radius:30px;padding:4px 9px;font-size:12px}.log-row{border-bottom:1px solid #eee;padding:12px 0;overflow-wrap:anywhere}.log-row code{font-size:12px}.mini{font-size:13px}.hint{background:#fff8e6;padding:12px;border-radius:9px;color:#78500a}#adminTabs button{background:#eee;color:#333}#adminTabs button.active{background:#ae1622;color:white}@media(max-width:780px){.admin-grid{grid-template-columns:1fr}}
@@ -156,9 +156,12 @@ body:not(.logged-in) #login{width:min(100%,470px);margin:0 auto!important;flex-s
  #appHeader .header-actions{gap:4px}
  #appHeader .header-actions .icon-action{width:33px;height:33px;min-width:33px;font-size:19px}
 }
+
+/* Penanda jelas agar transaksi pengujian tidak tertukar dengan Production */
+body::before{content:'V11 DEV — DATA UJI, BUKAN PRODUCTION';position:fixed;right:10px;top:8px;z-index:9999;background:#111827;color:#fff;padding:5px 10px;border-radius:7px;font:700 10px system-ui;pointer-events:none;opacity:.9}
 </style></head>
-<body><header id="appHeader"><div class="brand"><img src="https://drive.google.com/thumbnail?id=1dVBSCD8Vx692icERGy2i7j_LxCcgjdNN&amp;sz=w400" alt="Logo Inu Chicken"><div><h1>Inu Chicken POS</h1><span class="role-chip" id="roleTop">—</span></div></div><div class="header-actions"><span id="headerBranch" class="header-branch" hidden></span><button type="button" id="headerReload" class="icon-action" aria-label="Muat ulang" title="Muat ulang">↻</button><button type="button" id="themeToggle" class="icon-action" aria-label="Mode malam" title="Mode malam">☾</button><button type="button" id="headerLogout" class="icon-action exit" aria-label="Keluar" title="Keluar"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></button></div><span id="identity" hidden></span></header>
-<main><section id="login" class="panel"><div class="login-mark"><img src="https://drive.google.com/thumbnail?id=1dVBSCD8Vx692icERGy2i7j_LxCcgjdNN&amp;sz=w400" alt="Logo Inu Chicken" onerror="this.style.display='none';this.parentNode.textContent='🍗'"></div><h2>Selamat Datang</h2><p class="login-subtitle">INU CHICKEN POS</p><form id="pinLoginForm"><label>PIN 6 digit<input id="loginPin" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" required></label><p id="loginPinError" class="error mini" role="alert" aria-live="polite" hidden style="margin:0 0 12px;text-align:left"></p><button id="pinLoginBtn" type="submit">Masuk <span aria-hidden="true" class="login-arrow">→</span></button></form><details><summary>Login cadangan Owner (trial)</summary><form id="loginForm"><label>Email<input id="email" type="email" required autocomplete="username"></label><label>Password<input id="password" type="password" required autocomplete="current-password"></label><button id="loginBtn">Masuk</button></form><p class="muted small">Gunakan akun yang telah dibuat di Supabase Auth dan memiliki profil aktif.</p></details></section>
+<body><header id="appHeader"><div class="brand"><img src="https://drive.google.com/thumbnail?id=1dVBSCD8Vx692icERGy2i7j_LxCcgjdNN&amp;sz=w400" alt="Logo Inu Chicken"><div><h1>Inu Chicken POS <small style="font-size:11px">DEV V11</small></h1><span class="role-chip" id="roleTop">—</span></div></div><div class="header-actions"><span id="headerBranch" class="header-branch" hidden></span><button type="button" id="headerReload" class="icon-action" aria-label="Muat ulang" title="Muat ulang">↻</button><button type="button" id="themeToggle" class="icon-action" aria-label="Mode malam" title="Mode malam">☾</button><button type="button" id="headerLogout" class="icon-action exit" aria-label="Keluar" title="Keluar"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></button></div><span id="identity" hidden></span></header>
+<main><section id="login" class="panel"><div class="login-mark"><img src="https://drive.google.com/thumbnail?id=1dVBSCD8Vx692icERGy2i7j_LxCcgjdNN&amp;sz=w400" alt="Logo Inu Chicken" onerror="this.style.display='none';this.parentNode.textContent='🍗'"></div><h2>Selamat Datang</h2><p class="login-subtitle">INU CHICKEN POS · V11 DEV — DATA UJI</p><form id="pinLoginForm"><label>PIN 6 digit<input id="loginPin" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" required></label><p id="loginPinError" class="error mini" role="alert" aria-live="polite" hidden style="margin:0 0 12px;text-align:left"></p><button id="pinLoginBtn" type="submit">Masuk <span aria-hidden="true" class="login-arrow">→</span></button></form><details><summary>Login cadangan Owner (trial)</summary><form id="loginForm"><label>Email<input id="email" type="email" required autocomplete="username"></label><label>Password<input id="password" type="password" required autocomplete="current-password"></label><button id="loginBtn">Masuk</button></form><p class="muted small">Gunakan akun yang telah dibuat di Supabase Auth dan memiliki profil aktif.</p></details></section>
 <section id="app"><nav class="top-nav" id="topNav" aria-label="Navigasi aplikasi">
 <button type="button" data-view="report" data-owner-only>📊 Report & Analisa</button>
 <button type="button" data-view="transaction">🛒 Kasir</button>
@@ -212,10 +215,23 @@ body:not(.logged-in) #login{width:min(100%,470px);margin:0 auto!important;flex-s
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 "use strict";
-const URL_SUPABASE="https://ptdvctefkoretlehxaay.supabase.co";
-const KEY_SUPABASE="sb_publishable_OcT7N2aW4RSFnQBzlCwipg_733TBZ1p";
+const URL_SUPABASE="https://igzivuminwfnmeuwjatq.supabase.co";
+const KEY_SUPABASE="sb_publishable_En_TTcjQ6nuCtSKeook_Nw_jfK7nj-7";
 const $=id=>document.getElementById(id), rupiah=n=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0);
-const sb=window.supabase.createClient(URL_SUPABASE,KEY_SUPABASE);
+// Fail closed: jangan izinkan aplikasi DEV terhubung ke Production.
+if (location.hostname !== 'dev.ragajaya.my.id' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+  throw new Error('V11 DEV hanya boleh dibuka dari domain DEV.');
+}
+if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(URL_SUPABASE) ||
+    URL_SUPABASE === 'https://ptdvctefkoretlehxaay.supabase.co' ||
+    KEY_SUPABASE === 'ISI_PUBLISHABLE_KEY_DEV' ||
+    URL_SUPABASE.includes('ISI_PROJECT_REF_DEV')) {
+  document.body.innerHTML = '<main style="padding:32px;display:block"><h2>V11 DEV belum dikonfigurasi</h2><p>Isi URL dan publishable key Supabase DEV pada index.html. Jangan gunakan kredensial Production.</p></main>';
+  throw new Error('Konfigurasi Supabase DEV belum valid.');
+}
+const sb=window.supabase.createClient(URL_SUPABASE,KEY_SUPABASE,{
+  auth:{storageKey:'inu-v11-dev-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+});
 let user=null,profile=null,branches=[],products=[],cart=new Map(),pendingId=null,busy=false;
 function message(s,bad=false){$("notice").textContent=s;$("notice").className=bad?"error":"ok"}
 async function logError(e,modul="app",level="error"){
@@ -237,7 +253,7 @@ async function logError(e,modul="app",level="error"){
 }
 function escapeHTML(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 // Offline: setiap penjualan ditulis ke IndexedDB SEBELUM dikirim ke server.
-const OFFLINE_DB="inu-chicken-pos-offline-v1", OFFLINE_STORE="transactions";
+const OFFLINE_DB="inu-chicken-pos-offline-v11-dev", OFFLINE_STORE="transactions";
 let offlineDbPromise=null,offlineSyncBusy=false,offlineTimer=null;
 function offlineDb(){
  if(!('indexedDB' in window))return Promise.reject(Error('Browser tidak mendukung penyimpanan IndexedDB.'));
@@ -462,7 +478,7 @@ async function loadProductAnalytics(){
 }
 
 // Batas sesi kasir mengikuti tanggal Asia/Jakarta, bukan zona waktu perangkat.
-const INU_CASHIER_DAY_KEY="inu_cashier_login_day_v10";
+const INU_CASHIER_DAY_KEY="inu_cashier_login_day_v11_dev";
 const inuWibDay=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 let inuDayGuardBusy=false;
 async function inuEnforceCashierDay(){
@@ -973,10 +989,5 @@ $('importConfirm').addEventListener('click',async()=>{
 });
 
 </script><script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/inu/service-worker.js', {scope:'/inu/'})
-      .catch(err => console.warn('PWA service worker gagal:', err));
-  });
-}
+// DEV: service worker Production tidak didaftarkan. PWA DEV dibuat terpisah setelah pengujian.
 </script></body></html>
