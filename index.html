@@ -176,7 +176,7 @@ body::before{content:'V11 DEV — DATA UJI, BUKAN PRODUCTION';position:fixed;rig
 </nav><div class="panel flex" id="branchToolbar"><label>Cabang <select id="branch"></select></label><span id="role" class="muted"></span></div>
 <div id="cashierAttendanceStatus" class="attendance-chip" hidden><strong>🕒 Absensi:</strong><span id="cashierAttendanceText">Memeriksa...</span><button type="button" id="retryAttendance" class="secondary" hidden>Coba Absen Lagi</button></div>
 <div id="offlineStrip" class="offline-strip" hidden><strong id="offlineStatus">Memeriksa koneksi...</strong><span id="offlineQueueCount">0 transaksi tertunda</span><button type="button" id="offlineDetails" class="secondary">Lihat Antrean</button><div id="offlineQueueList" style="width:100%" hidden></div></div><div id="notice" role="status" aria-live="polite"></div>
-<section id="reportPanel" hidden><div class="view-title"><div><h2>📊 Report & Analisa Penjualan</h2><p class="muted">Ringkasan transaksi yang dapat diakses Owner</p></div><span class="tag" id="reportScope">Hari ini</span></div><div class="report-filters" id="reportFilters"><button type="button" data-period="today" class="active">Hari Ini</button><button type="button" data-period="seven">7 Hari Terakhir</button><button type="button" data-period="week">Minggu Ini</button><button type="button" data-period="month">Bulan Ini</button><button type="button" data-period="custom">📅 Tanggal Bebas</button></div><form id="reportCustomDates" hidden><label>Dari tanggal<input id="reportCustomStart" type="date" required></label><label>Sampai tanggal<input id="reportCustomEnd" type="date" required></label><button type="submit">Tampilkan Report</button></form><p id="reportDateError" class="error mini" role="alert" hidden></p>
+<section id="reportPanel" hidden><div class="view-title"><div><h2>📊 Report & Analisa Penjualan</h2><p class="muted">Ringkasan transaksi yang dapat diakses Owner</p></div><span class="tag" id="reportScope">Hari ini</span></div><div class="report-filters" id="reportFilters"><button type="button" data-period="today" class="active">Hari Ini</button><button type="button" data-period="seven">7 Hari Terakhir</button><button type="button" data-period="week">Minggu Ini</button><button type="button" data-period="month">Bulan Ini</button><button type="button" data-period="custom">📅 Tanggal Bebas</button></div><div class="flex" id="v11DashboardTools" style="margin:8px 0 17px"><label>Filter Cabang <select id="v11ReportBranch"><option value="">Semua Cabang</option></select></label><button type="button" id="v11ExportDashboard">⬇ Export Dashboard Excel</button><button type="button" id="v11ValidateDashboard" class="secondary">✓ Validasi Data</button></div><p id="v11DashboardStatus" class="muted mini" role="status"></p><section id="v11ValidationPanel" class="panel" hidden><h3>Hasil Validasi Dashboard</h3><div id="v11ValidationResults"></div></section><form id="reportCustomDates" hidden><label>Dari tanggal<input id="reportCustomStart" type="date" required></label><label>Sampai tanggal<input id="reportCustomEnd" type="date" required></label><button type="submit">Tampilkan Report</button></form><p id="reportDateError" class="error mini" role="alert" hidden></p>
 <div class="stat-grid"><div class="stat-card orange"><small>Total Penjualan</small><strong id="reportRevenue">Rp 0</strong></div><div class="stat-card"><small>Jumlah Transaksi</small><strong id="reportCount">0</strong></div><div class="stat-card"><small>Tunai</small><strong id="reportCash">Rp 0</strong></div><div class="stat-card"><small>QRIS</small><strong id="reportNoncash">Rp 0</strong></div></div>
 <div class="stat-grid" style="margin-top:14px" id="v11AnalyticsKpis"><div class="stat-card"><small>Rata-rata per Transaksi</small><strong id="v11AvgSale">Rp 0</strong></div><div class="stat-card"><small>Perubahan Omzet vs Periode Sebelumnya</small><strong id="v11Growth">—</strong><div class="muted small" id="v11GrowthNote">Menunggu data</div></div><div class="stat-card"><small>Produk Terlaris (QTY)</small><strong id="v11TopQty">—</strong></div><div class="stat-card"><small>Produk Terlaris (Omzet)</small><strong id="v11TopRevenue">—</strong></div></div><section class="panel" id="v11HppPanel"><h3>Estimasi Laba Kotor (HPP)</h3><p id="v11HppStatus" class="muted mini">Belum dihitung. Memerlukan HPP per produk yang terverifikasi.</p></section>
 <div class="stat-grid" style="margin-top:14px"><div class="stat-card orange"><small>🍗🍚 Total QTY Produk Terjual (Nasi + Ayam &amp; Ayam Only)</small><strong id="reportCombinedQty">—</strong><div class="muted small">Akumulasi QTY kedua kategori, tidak termasuk nasi/saus terpisah</div></div></div>
@@ -347,6 +347,8 @@ function showView(view){
  window.scrollTo({top:0,behavior:"instant"});
 }
 document.querySelectorAll("#topNav [data-view]").forEach(b=>b.addEventListener("click",()=>showView(b.dataset.view)));
+function v11ScopedRows(){const id=$("v11ReportBranch")?.value||"";return (window.reportSalesRows||[]).filter(x=>x.status==="completed"&&(!id||x.branch_id===id));}
+function v11RefreshBranchOptions(){const el=$("v11ReportBranch");const old=el.value;el.innerHTML='<option value="">Semua Cabang</option>'+branches.map(b=>`<option value="${escapeHTML(b.id)}">${escapeHTML(b.name)}</option>`).join("");if(branches.some(b=>b.id===old))el.value=old;}
 function renderModernReport(rows,branchData){
  const byDate=new Map();
  for(const s of rows){const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(s.sold_at));const x=byDate.get(date)||{cash:0,qris:0};if(s.payment_method==='tunai')x.cash+=Number(s.total)||0;else x.qris+=Number(s.total)||0;byDate.set(date,x)}
@@ -368,7 +370,7 @@ async function v11ComparePrevious(range,seq,truncated){
  const previousFrom=new Date(new Date(range.from).getTime()-duration).toISOString();
  let previousTotal=0,previousCount=0;
  for(let offset=0;offset<10000;offset+=1000){
-  const page=await check(await sb.from("sales").select("total,status").gte("sold_at",previousFrom).lt("sold_at",range.from).order("sold_at",{ascending:false}).range(offset,offset+999));
+  let query=sb.from("sales").select("total,status").gte("sold_at",previousFrom).lt("sold_at",range.from);if($("v11ReportBranch").value)query=query.eq("branch_id",$("v11ReportBranch").value);const page=await check(await query.order("sold_at",{ascending:false}).range(offset,offset+999));
   if(seq!==reportFetchSeq)return;
   for(const x of page)if(x.status==="completed")previousTotal+=Number(x.total||0);
   previousCount+=page.length;
@@ -376,7 +378,7 @@ async function v11ComparePrevious(range,seq,truncated){
  }
  if(seq!==reportFetchSeq)return;
  if(previousCount>=10000){label.textContent="—";note.textContent="Data pembanding mencapai batas 10.000 transaksi";return;}
- const current=(window.reportSalesRows||[]).filter(x=>x.status==="completed").reduce((n,x)=>n+Number(x.total||0),0);
+ const current=v11ScopedRows().reduce((n,x)=>n+Number(x.total||0),0);
  if(!previousTotal){label.textContent="—";note.textContent="Periode sebelumnya tanpa omzet; persentase tidak dihitung";return;}
  const pct=(current-previousTotal)/previousTotal*100;
  label.textContent=(pct>0?"+":"")+new Intl.NumberFormat("id-ID",{maximumFractionDigits:1}).format(pct)+"%";
@@ -384,7 +386,7 @@ async function v11ComparePrevious(range,seq,truncated){
 }
 function renderReport(){
  if(profile?.role!=="owner")return;
- const rows=(window.reportSalesRows||[]).filter(x=>x.status==="completed");
+ const rows=v11ScopedRows();
  const sum=items=>items.reduce((n,x)=>n+Number(x.total||0),0);
  const cash=rows.filter(x=>x.payment_method==="tunai");
  const noncash=rows.filter(x=>x.payment_method==="non_tunai");
@@ -439,7 +441,7 @@ async function loadReportPeriod(){
    if(page.length<1000)break;
    if(offset===9000)truncated=true;
   }
-  window.reportSalesRows=all;
+  window.reportSalesRows=all;window.v11ReportTruncated=truncated;window.v11ReportRange=range;v11RefreshBranchOptions();
   $("reportScope").textContent=labels[reportPeriod]+(truncated?" · maksimal 10.000 transaksi":"");
   renderReport();
   if(truncated){$("v11Growth").textContent="—";$("v11GrowthNote").textContent="Data tidak lengkap";}
@@ -485,7 +487,7 @@ async function loadProductAnalytics(){
  if(profile?.role!=="owner")return;
  const seq=++analyticsRequest;
  $("reportCombinedQty").textContent="Memuat...";
- const rows=(window.reportSalesRows||[]).filter(s=>s.status==="completed");
+ const rows=v11ScopedRows();
  const values=[0,0,0,0],qtys=[0,0,0,0];
  if(!rows.length){$("v11TopQty").textContent="—";$("v11TopRevenue").textContent="—";renderProductCharts(values,qtys);$("productChartStatus").textContent="Belum ada transaksi selesai dalam periode ini.";return;}
  const saleIds=rows.map(s=>s.id);
@@ -512,6 +514,58 @@ async function loadProductAnalytics(){
  $("productChartStatus").textContent="Grafik berdasarkan transaksi selesai pada periode yang dipilih. Produk di luar empat kategori tidak ditampilkan.";
 }
 
+// V11 Dashboard Terpadu: filter cabang, export, dan validasi read-only.
+let v11DashboardBusy=false;
+async function v11DashboardRefresh(){
+ const seq=++analyticsRequest;
+ renderReport();
+ // loadProductAnalytics mengelola sequence-nya sendiri.
+ await loadProductAnalytics();
+ const range=window.v11ReportRange;
+ if(range){const fetchSeq=reportFetchSeq;try{await v11ComparePrevious(range,fetchSeq,!!window.v11ReportTruncated)}catch(e){$("v11Growth").textContent="—";$("v11GrowthNote").textContent="Pembanding tidak tersedia: "+String(e.message||e)}}
+}
+$("v11ReportBranch").addEventListener("change",()=>{v11DashboardRefresh().catch(e=>{$("v11DashboardStatus").textContent="Filter gagal: "+e.message})});
+function v11DashboardValidation(){
+ const rows=v11ScopedRows(),money=xs=>xs.reduce((n,x)=>n+Number(x.total||0),0),total=money(rows);
+ const cash=money(rows.filter(x=>x.payment_method==="tunai"));
+ const qris=money(rows.filter(x=>x.payment_method==="non_tunai"));
+ const branchTotals=new Map();for(const x of rows)branchTotals.set(x.branch_id,(branchTotals.get(x.branch_id)||0)+Number(x.total||0));
+ const sumBranches=[...branchTotals.values()].reduce((a,b)=>a+b,0);
+ const checks=[
+  ["Omzet = Tunai + QRIS",Math.abs(total-cash-qris)<0.01,`${rupiah(total)} vs ${rupiah(cash+qris)}`],
+  ["Omzet = total seluruh cabang",Math.abs(total-sumBranches)<0.01,`${rupiah(total)} vs ${rupiah(sumBranches)}`],
+  ["Jumlah transaksi completed",rows.every(x=>x.status==="completed"),`${rows.length} transaksi`],
+  ["Nilai transaksi valid",rows.every(x=>Number.isFinite(Number(x.total))&&Number(x.total)>=0),"Total numerik dan tidak negatif"],
+  ["Kelengkapan pengambilan data",!window.v11ReportTruncated,window.v11ReportTruncated?"Batas 10.000 baris tercapai; hasil belum lengkap":"Tidak mencapai batas 10.000 baris"],
+  ["Grafik harian terisi",!rows.length||!!$("modernDailyChart").querySelector(".daily-column"),`${rows.length} transaksi dalam filter`],
+  ["Grafik cabang terisi",!rows.length||!!$("modernBranchChart").querySelector(".branch-modern-row"),`${branchTotals.size} cabang dalam filter`]
+ ];
+ const html=checks.map(([name,ok,detail])=>`<div class="flex" style="padding:9px 0;border-bottom:1px solid #e5e7eb"><strong style="color:${ok?'#15803d':'#b91c1c'}">${ok?'✓ LULUS':'✕ PERIKSA'}</strong><span>${escapeHTML(name)}</span><span class="muted mini">${escapeHTML(detail)}</span></div>`).join("");
+ $("v11ValidationResults").innerHTML=html+`<p class="muted mini">Validasi otomatis memeriksa konsistensi data yang dimuat browser, bukan audit langsung terhadap seluruh database atau HPP.</p>`;
+ $("v11ValidationPanel").hidden=false;
+ return checks;
+}
+$("v11ValidateDashboard").addEventListener("click",()=>{const c=v11DashboardValidation();$("v11DashboardStatus").textContent=`Validasi: ${c.filter(x=>x[1]).length}/${c.length} pemeriksaan lulus.`});
+$("v11ExportDashboard").addEventListener("click",async()=>{
+ if(v11DashboardBusy)return;
+ if(!window.XLSX){$("v11DashboardStatus").textContent="Library Excel belum termuat. Cek internet.";return;}
+ v11DashboardBusy=true;$("v11ExportDashboard").disabled=true;
+ try{
+  const rows=v11ScopedRows(),range=window.v11ReportRange;if(!range)throw Error("Muat laporan dahulu.");
+  const checks=v11DashboardValidation();
+  const money=xs=>xs.reduce((n,x)=>n+Number(x.total||0),0);
+  const branchMap=new Map(),dayMap=new Map();
+  for(const x of rows){const name=branches.find(b=>b.id===x.branch_id)?.name||"Cabang tidak diketahui";const b=branchMap.get(name)||{count:0,total:0};b.count++;b.total+=Number(x.total||0);branchMap.set(name,b);const day=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(x.sold_at));const d=dayMap.get(day)||{count:0,cash:0,qris:0};d.count++;if(x.payment_method==="tunai")d.cash+=Number(x.total||0);else if(x.payment_method==="non_tunai")d.qris+=Number(x.total||0);dayMap.set(day,d)}
+  const wb=XLSX.utils.book_new(),add=(name,header,data)=>{const ws=XLSX.utils.aoa_to_sheet([header,...data]);ws['!cols']=header.map(h=>({wch:Math.min(36,Math.max(15,h.length+3))}));XLSX.utils.book_append_sheet(wb,ws,name)};
+  add("Ringkasan",["Metrik","Nilai"],[["Periode Mulai WIB",range.from],["Periode Akhir (eksklusif)",range.to],["Cabang",branches.find(b=>b.id===$("v11ReportBranch").value)?.name||"Semua Cabang"],["Transaksi selesai",rows.length],["Omzet",money(rows)],["Tunai",money(rows.filter(x=>x.payment_method==="tunai"))],["QRIS",money(rows.filter(x=>x.payment_method==="non_tunai"))],["Rata-rata per transaksi",rows.length?money(rows)/rows.length:0],["Perubahan omzet",$("v11Growth").textContent],["Produk terlaris QTY",$("v11TopQty").textContent],["Produk terlaris omzet",$("v11TopRevenue").textContent],["Status HPP",$("v11HppStatus").textContent],["Data dibatasi",window.v11ReportTruncated?"YA":"TIDAK"]]);
+  add("Harian",["Tanggal WIB","Transaksi","Tunai","QRIS","Total"],[...dayMap].sort((a,b)=>a[0].localeCompare(b[0])).map(([d,x])=>[d,x.count,x.cash,x.qris,x.cash+x.qris]));
+  add("Cabang",["Cabang","Transaksi","Omzet"],[...branchMap].sort((a,b)=>b[1].total-a[1].total).map(([n,x])=>[n,x.count,x.total]));
+  add("Transaksi",["ID","Waktu","Cabang","Metode","Status","Total"],rows.map(x=>[x.id,x.sold_at,branches.find(b=>b.id===x.branch_id)?.name||x.branch_id,x.payment_method,x.status,Number(x.total||0)]));
+  add("Validasi",["Pemeriksaan","Hasil","Detail"],checks.map(x=>[x[0],x[1]?"LULUS":"PERIKSA",x[2]]));
+  XLSX.writeFile(wb,"INU_V11_Dashboard_"+range.from.slice(0,10)+"_"+range.to.slice(0,10)+".xlsx");
+  $("v11DashboardStatus").textContent="Excel Dashboard berhasil dibuat (5 sheet).";
+ }catch(e){$("v11DashboardStatus").textContent="Export gagal: "+String(e.message||e)}finally{v11DashboardBusy=false;$("v11ExportDashboard").disabled=false}
+});
 // Batas sesi kasir mengikuti tanggal Asia/Jakarta, bukan zona waktu perangkat.
 const INU_CASHIER_DAY_KEY="inu_cashier_login_day_v11_dev";
 const inuWibDay=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
