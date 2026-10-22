@@ -182,7 +182,7 @@ body::before{content:'V11 DEV — DATA UJI, BUKAN PRODUCTION';position:fixed;rig
 <div class="stat-grid" style="margin-top:14px"><div class="stat-card orange"><small>🍗🍚 Total QTY Produk Terjual (Nasi + Ayam &amp; Ayam Only)</small><strong id="reportCombinedQty">—</strong><div class="muted small">Akumulasi QTY kedua kategori, tidak termasuk nasi/saus terpisah</div></div></div>
 <section class="panel" style="margin-top:16px"><h3>Penjualan per Cabang</h3><div id="reportBranchBars" class="branch-chart-wrap" aria-label="Grafik batang penjualan per cabang"></div></section>
 <div class="report-grid-modern"><section class="panel"><div class="flex" style="justify-content:space-between"><h3>📊 Penjualan Harian</h3><span class="chart-legend"><span><i class="legend-dot"></i>Tunai</span><span><i class="legend-dot qris"></i>QRIS</span></span></div><div id="modernDailyChart" class="daily-chart" aria-label="Grafik batang penjualan harian"></div></section><section class="panel"><h3>🏬 Penjualan per Cabang</h3><div id="modernBranchChart" class="branch-modern"></div></section></div>
-<div class="product-charts" aria-label="Grafik informasi penjualan produk">
+<section class="panel" id="v11ProPanel" style="margin-top:16px"><h3>📈 Dashboard Pro — Analitik Operasional</h3><p class="muted mini">Data berdasarkan periode dan cabang terpilih. Target disimpan lokal di browser Owner, bukan database.</p><div class="flex" style="margin-bottom:14px"><label>Target omzet periode (Rp) <input id="proTarget" type="number" min="0" step="1000" placeholder="Contoh: 1000000"></label><button type="button" id="proSaveTarget">Simpan Target Lokal</button><span id="proTargetStatus" class="muted mini"></span></div><div class="stat-grid" style="margin-bottom:15px"><div class="stat-card"><small>Pencapaian Target</small><strong id="proAchievement">Belum diatur</strong></div><div class="stat-card"><small>Transaksi Void</small><strong id="proVoid">—</strong></div><div class="stat-card"><small>Nilai Void</small><strong id="proVoidValue">—</strong></div><div class="stat-card"><small>Peringatan Anomali</small><strong id="proAlerts">—</strong></div></div><div class="report-grid"><div class="panel"><h3>⏰ Jam Ramai (WIB)</h3><div id="proHours"></div></div><div class="panel"><h3>💳 Analisis Pembayaran</h3><div id="proPayments"></div></div><div class="panel"><h3>🏆 Ranking Cabang</h3><div id="proBranches"></div></div><div class="panel"><h3>👤 Performa Kasir</h3><div id="proCashiers">Memuat...</div></div><div class="panel"><h3>🗓️ Heatmap Hari × Jam (WIB)</h3><div id="proHeatmap" style="overflow-x:auto"></div></div><div class="panel"><h3>🔎 Deteksi Anomali (indikator, bukan bukti kecurangan)</h3><div id="proAnomalies"></div></div></div><p id="proStatus" class="muted mini" role="status"></p></section><div class="product-charts" aria-label="Grafik informasi penjualan produk">
 <section class="product-chart-card orange"><h3>INFORMASI PENJUALAN INU CHICKEN</h3><div class="product-chart-plot" id="productValuePlot"></div><div class="product-chart-table-wrap"><table class="product-chart-table"><thead><tr><th>NAMA BARANG</th><th>NASI + AYAM</th><th>AYAM</th><th>NASI</th><th>SAUS / SAMBAL</th></tr></thead><tbody><tr id="productValueRow"><td>NILAI</td><td colspan="4">Memuat...</td></tr><tr id="productValueQtyRow"><td>QTY</td><td colspan="4">Memuat...</td></tr></tbody></table></div></section>
 <section class="product-chart-card green"><h3>INFORMASI PENJUALAN TERLARIS</h3><div class="product-chart-plot" id="productQtyPlot"></div><div class="product-chart-table-wrap"><table class="product-chart-table"><thead><tr><th>NAMA BARANG</th><th>NASI + AYAM</th><th>AYAM</th><th>NASI</th><th>SAUS / SAMBAL</th></tr></thead><tbody><tr id="productBestValueRow"><td>NILAI</td><td colspan="4">Memuat...</td></tr><tr id="productBestQtyRow"><td>QTY</td><td colspan="4">Memuat...</td></tr></tbody></table></div></section></div>
 <p id="productChartStatus" class="muted small" role="status">Data kategori produk mengikuti periode laporan yang dipilih.</p>
@@ -396,9 +396,9 @@ function renderReport(){
  const grouped=new Map();for(const x of rows){const name=branches.find(b=>b.id===x.branch_id)?.name||"Cabang tidak diketahui";grouped.set(name,(grouped.get(name)||0)+Number(x.total||0))}
  const branchData=[...grouped].map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value);
  const chart=$("reportBranchBars");
- if(!branchData.length){chart.innerHTML="<p class='muted'>Belum ada transaksi selesai pada periode ini.</p>";renderModernReport(rows,branchData);v11RenderExtraKpis(rows);return;}
+ if(!branchData.length){chart.innerHTML="<p class='muted'>Belum ada transaksi selesai pada periode ini.</p>";renderModernReport(rows,branchData);v11RenderExtraKpis(rows);proRender();return;}
  const max=Math.max(1,...branchData.map(x=>x.value));
- chart.innerHTML=`<div class="branch-chart" role="img" aria-label="Grafik penjualan per cabang">${branchData.map(x=>`<div class="branch-chart-item"><span class="branch-chart-value">${rupiah(x.value)}</span><div class="branch-chart-bar" style="height:${x.value>0?Math.max(3,x.value/max*100):0}%" title="${escapeHTML(x.name)}: ${rupiah(x.value)}"></div><span class="branch-chart-name" title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</span></div>`).join("")}</div>`;renderModernReport(rows,branchData);v11RenderExtraKpis(rows);
+ chart.innerHTML=`<div class="branch-chart" role="img" aria-label="Grafik penjualan per cabang">${branchData.map(x=>`<div class="branch-chart-item"><span class="branch-chart-value">${rupiah(x.value)}</span><div class="branch-chart-bar" style="height:${x.value>0?Math.max(3,x.value/max*100):0}%" title="${escapeHTML(x.name)}: ${rupiah(x.value)}"></div><span class="branch-chart-name" title="${escapeHTML(x.name)}">${escapeHTML(x.name)}</span></div>`).join("")}</div>`;renderModernReport(rows,branchData);v11RenderExtraKpis(rows);proRender();
 }
 
 
@@ -435,7 +435,7 @@ async function loadReportPeriod(){
  try{
   const all=[];let truncated=false;
   for(let offset=0;offset<10000;offset+=1000){
-   const page=await check(await sb.from("sales").select("id,branch_id,sold_at,payment_method,total,status").gte("sold_at",range.from).lt("sold_at",range.to).order("sold_at",{ascending:false}).range(offset,offset+999));
+   const page=await check(await sb.from("sales").select("id,branch_id,cashier_id,sold_at,payment_method,total,status").gte("sold_at",range.from).lt("sold_at",range.to).order("sold_at",{ascending:false}).range(offset,offset+999));
    if(seq!==reportFetchSeq)return;
    all.push(...page);
    if(page.length<1000)break;
@@ -443,7 +443,7 @@ async function loadReportPeriod(){
   }
   window.reportSalesRows=all;window.v11ReportTruncated=truncated;window.v11ReportRange=range;v11RefreshBranchOptions();
   $("reportScope").textContent=labels[reportPeriod]+(truncated?" · maksimal 10.000 transaksi":"");
-  renderReport();
+  renderReport();proLoadProfiles();
   if(truncated){$("v11Growth").textContent="—";$("v11GrowthNote").textContent="Data tidak lengkap";}
   await loadProductAnalytics();
   try{await v11ComparePrevious(range,seq,truncated)}catch(compareErr){if(seq===reportFetchSeq){$("v11Growth").textContent="—";$("v11GrowthNote").textContent="Pembanding belum tersedia: "+String(compareErr.message||compareErr)}}
@@ -639,7 +639,7 @@ async function loadSales(){
  const seq=++salesLoadSeq, status=$("salesReadStatus");
  status.textContent="Memuat transaksi dari Supabase...";
  try{
-  let q=sb.from("sales").select("id,branch_id,sold_at,payment_method,total,status").order("sold_at",{ascending:false});
+  let q=sb.from("sales").select("id,branch_id,cashier_id,sold_at,payment_method,total,status").order("sold_at",{ascending:false});
   if(profile.role==="kasir"){
    // Gunakan perhitungan WIB yang sama dengan halaman Report; jangan bergantung pada format locale en-CA.
    const today=jakartaDate(),tomorrow=new Date(today);
@@ -1076,6 +1076,32 @@ $('importConfirm').addEventListener('click',async()=>{
  }catch(err){status.className='error';status.textContent=`Terhenti: ${inserted} baru, ${skipped} duplikat. ${String(err.message||err)}. Import ulang file yang sama aman karena ID lama dicek.`}
  finally{legacyImportBusy=false;$('importConfirm').disabled=false}
 });
+
+
+// V11 Pro: analytics read-only; no mutation of sales, auth, or offline queue.
+let proCashierNames=new Map(),proProfilesLoading=false;
+const proWibParts=d=>{const a=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',weekday:'short',hour:'2-digit',hourCycle:'h23'}).formatToParts(new Date(d));return {day:a.find(x=>x.type==='weekday')?.value||'?',hour:Number(a.find(x=>x.type==='hour')?.value||0)};};
+function proTargetKey(){return 'inu-v11-pro-target-'+(profile?.id||user?.id||'owner')+'-'+(window.v11ReportRange?.from||'')+'-'+(window.v11ReportRange?.to||'')+'-'+($('v11ReportBranch')?.value||'all');}
+function proRender(){
+ if(profile?.role!=='owner')return;
+ const all=window.reportSalesRows||[],branch=$('v11ReportBranch')?.value||'';
+ const filtered=all.filter(x=>!branch||x.branch_id===branch),rows=filtered.filter(x=>x.status==='completed'),voids=filtered.filter(x=>x.status==='void');
+ const sum=a=>a.reduce((n,x)=>n+Number(x.total||0),0),total=sum(rows);
+ const target=Number(localStorage.getItem(proTargetKey())||0);$('proTarget').value=target||'';
+ $('proAchievement').textContent=target?new Intl.NumberFormat('id-ID',{maximumFractionDigits:1}).format(total/target*100)+'%':'Belum diatur';
+ $('proVoid').textContent=String(voids.length);$('proVoidValue').textContent=rupiah(sum(voids));
+ const hours=Array.from({length:24},(_,h)=>({h,count:0,value:0})),heat=new Map(),pay=new Map(),bmap=new Map(),cmap=new Map();
+ for(const x of rows){const w=proWibParts(x.sold_at),v=Number(x.total||0);hours[w.hour].count++;hours[w.hour].value+=v;const key=w.day+'-'+w.hour;heat.set(key,(heat.get(key)||0)+1);const method=x.payment_method==='tunai'?'Tunai':x.payment_method==='non_tunai'?'QRIS':'Lainnya';pay.set(method,(pay.get(method)||0)+v);const b=bmap.get(x.branch_id)||{count:0,value:0};b.count++;b.value+=v;bmap.set(x.branch_id,b);const c=cmap.get(x.cashier_id)||{count:0,value:0};c.count++;c.value+=v;cmap.set(x.cashier_id,c);}
+ const peak=Math.max(1,...hours.map(x=>x.count));$('proHours').innerHTML=hours.filter(x=>x.count).map(x=>`<div class="report-bar-label"><span>${String(x.h).padStart(2,'0')}:00</span><span>${x.count} transaksi · ${rupiah(x.value)}</span></div><div class="report-track" style="margin-bottom:8px"><div class="report-fill" style="width:${x.count/peak*100}%"></div></div>`).join('')||'<p class="muted mini">Belum ada transaksi.</p>';
+ $('proPayments').innerHTML=[...pay].map(([name,value])=>`<div class="report-bar-label"><span>${escapeHTML(name)}</span><b>${rupiah(value)} (${total?(value/total*100).toFixed(1):0}%)</b></div><div class="report-track" style="margin-bottom:10px"><div class="report-fill" style="width:${total?value/total*100:0}%"></div></div>`).join('')||'<p class="muted mini">Belum ada transaksi.</p>';
+ $('proBranches').innerHTML=[...bmap].sort((a,b)=>b[1].value-a[1].value).map(([id,x],i)=>`<p class="mini"><b>${i+1}. ${escapeHTML(branches.find(b=>b.id===id)?.name||'Cabang tidak diketahui')}</b> — ${rupiah(x.value)} · ${x.count} transaksi</p>`).join('')||'<p class="muted mini">Belum ada transaksi.</p>';
+ $('proCashiers').innerHTML=[...cmap].sort((a,b)=>b[1].value-a[1].value).map(([id,x],i)=>`<p class="mini">${i+1}. <b>${escapeHTML(proCashierNames.get(id)||'Kasir '+String(id||'').slice(0,8))}</b> — ${rupiah(x.value)} · ${x.count} transaksi · rata-rata ${rupiah(x.value/x.count)}</p>`).join('')||'<p class="muted mini">Belum ada transaksi.</p>';
+ const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];const maxHeat=Math.max(1,...heat.values());let html='<table style="font-size:11px;min-width:610px"><thead><tr><th>Hari</th>'+Array.from({length:24},(_,h)=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>';for(const d of days){html+='<tr><th>'+d+'</th>'+Array.from({length:24},(_,h)=>{const n=heat.get(d+'-'+h)||0;return `<td style="text-align:center;background:rgba(229,9,40,${n?(.15+.8*n/maxHeat):0});color:${n&&n/maxHeat>.6?'white':'inherit'}" title="${d} ${h}:00 WIB: ${n} transaksi">${n||'·'}</td>`}).join('')+'</tr>';}$('proHeatmap').innerHTML=html+'</tbody></table>';
+ const issues=[];if(window.v11ReportTruncated)issues.push('Batas 10.000 baris: analitik dapat tidak lengkap.');for(const x of filtered){if(!Number.isFinite(Number(x.total))||Number(x.total)<0)issues.push('Nominal tidak valid: '+x.id);if(!['tunai','non_tunai'].includes(x.payment_method))issues.push('Metode pembayaran tidak dikenal: '+x.id);if(!x.branch_id)issues.push('Cabang kosong: '+x.id);}if(voids.length)issues.push(voids.length+' transaksi void pada periode ini (perlu review bila tidak diharapkan).');$('proAlerts').textContent=String(issues.length);$('proAnomalies').innerHTML=issues.length?issues.slice(0,20).map(x=>`<p class="mini">⚠ ${escapeHTML(x)}</p>`).join(''):'<p class="muted mini">Tidak ditemukan indikator anomali berdasarkan aturan sederhana ini.</p>';
+ $('proStatus').textContent=`Sumber: ${filtered.length} transaksi termuat (${rows.length} selesai, ${voids.length} void). Analitik kasir memakai identitas pada transaksi; target tersimpan di browser ini saja. Tidak termasuk transaksi offline belum sinkron.`;
+}
+async function proLoadProfiles(){if(proProfilesLoading||profile?.role!=='owner')return;proProfilesLoading=true;try{const data=await check(await sb.from('profiles').select('id,display_name').limit(1000));proCashierNames=new Map(data.map(x=>[x.id,x.display_name]));proRender();}catch(e){$('proStatus').textContent='Nama kasir tidak dapat dimuat: '+String(e.message||e)+'; ID tetap ditampilkan.';}finally{proProfilesLoading=false;}}
+$('proSaveTarget').addEventListener('click',()=>{const raw=$('proTarget').value;const n=Number(raw);if(!raw||!Number.isFinite(n)||n<=0){$('proTargetStatus').textContent='Masukkan target positif.';return;}localStorage.setItem(proTargetKey(),String(n));$('proTargetStatus').textContent='Target lokal tersimpan untuk periode dan cabang ini.';proRender();});
 
 </script><script>
 // DEV: service worker Production tidak didaftarkan. PWA DEV dibuat terpisah setelah pengujian.
